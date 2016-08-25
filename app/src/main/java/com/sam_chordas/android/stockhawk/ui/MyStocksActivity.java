@@ -11,10 +11,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
 import android.util.Log;
@@ -57,6 +57,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     private Context mContext;
     private Cursor mCursor;
     boolean isConnected;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +70,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         isConnected = activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
         setContentView(R.layout.activity_my_stocks);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         // The intent service is for executing immediate pulls from the Yahoo API
         // GCMTaskService can only schedule tasks, they cannot execute immediately
         mServiceIntent = new Intent(this, StockIntentService.class);
@@ -115,7 +118,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                             // doesn't already exist
                                             // in the DB and proceed accordingly
                                             Cursor c = getContentResolver().query(QuoteProvider
-                                                    .Quotes
+                                                            .Quotes
                                                             .CONTENT_URI,
                                                     new String[]{QuoteColumns.SYMBOL}, QuoteColumns
                                                             .SYMBOL + "= ?",
@@ -123,8 +126,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                             if (c.getCount() != 0) {
                                                 Toast toast =
                                                         Toast.makeText(MyStocksActivity.this,
-                                                                "This stock" +
-                                                                        " is already saved!",
+                                                                getString(R.string
+                                                                        .stock_already_saved),
                                                                 Toast.LENGTH_LONG);
                                                 toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                                                 toast.show();
@@ -177,13 +180,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     public void onResume() {
         super.onResume();
         getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
     }
 
     public void networkToast() {
@@ -191,10 +196,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     }
 
     public void restoreActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setTitle(mTitle);
+        if (toolbar != null)
+            toolbar.setTitle(mTitle);
     }
 
     @Override
@@ -253,8 +256,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             isConnected = sharedPreferences.getBoolean(key, isConnected);
             Log.d("activity", isConnected + " ");
         }
-        if(!isConnected){
-            Toast.makeText(this,"Internet connectivity lost.",Toast.LENGTH_SHORT).show();
+        if (!isConnected) {
+            Toast.makeText(this, "Internet connectivity lost.", Toast.LENGTH_SHORT).show();
         }
     }
 }
